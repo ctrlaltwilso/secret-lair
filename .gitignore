@@ -1,0 +1,26 @@
+# Secrets — never commit real credentials
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+/secretlair
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace files (only relevant if you start using `go work`)
+go.work
+go.work.sum
+
+# OS
+.DS_Store
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
