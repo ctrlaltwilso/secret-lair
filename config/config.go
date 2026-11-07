@@ -30,7 +30,7 @@ func Load() (Config, error) {
 
 	password := os.Getenv("GMAIL_APP_PASSWORD")
 	if password == "" {
-		return Config{}, fmt.Errorf("GMAIL_PASSWORD is not set")
+		return Config{}, fmt.Errorf("GMAIL_APP_PASSWORD is not set")
 	}
 
 	inbox := os.Getenv("GMAIL_INBOX")

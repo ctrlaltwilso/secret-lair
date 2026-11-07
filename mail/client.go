@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 
@@ -20,10 +21,23 @@ func MailClient(username string, app_password string, inbox string, address stri
 		return err
 	}
 
-	err = FetchLatestMessage(m, c, inbox)
+	raw, err := FetchLatestMessage(m, c, inbox)
 	if err != nil {
 		return err
 	}
+
+	text, err := PlainText(bytes.NewReader(raw))
+	if err != nil {
+		return err
+	}
+
+	firstLine, err := FirstLine(text)
+	if err != nil {
+		return err
+	}
+	kind := Classify(firstLine)
+
+	log.Printf("latest email: %q (kind: %s)", firstLine, kind)
 
 	if err := c.Logout().Wait(); err != nil {
 		return fmt.Errorf("failed to logout: %v", err)
@@ -75,19 +89,52 @@ func ListMailBoxes(client *imapclient.Client) ([]string, error) {
 	return names, nil
 }
 
-func FetchLatestMessage(m *imap.SelectData, c *imapclient.Client, inbox string) error {
+func FetchLatestMessage(m *imap.SelectData, c *imapclient.Client, inbox string) ([]byte, error) {
 
 	if m.NumMessages > 0 {
 		seqSet := imap.SeqSetNum(m.NumMessages)
-		fetchOptions := &imap.FetchOptions{Envelope: true}
+		bodySection := &imap.FetchItemBodySection{Peek: true}
+		fetchOptions := &imap.FetchOptions{
+			Envelope:    true,
+			BodySection: []*imap.FetchItemBodySection{bodySection},
+		}
 		messages, err := c.Fetch(seqSet, fetchOptions).Collect()
+
 		if err != nil {
-			return fmt.Errorf("failed to fetch first message in %s: %v", inbox, err)
+			return nil, fmt.Errorf("failed to fetch latest message in %s: %v", inbox, err)
 		}
 
-		log.Printf("subject of most recent message in %s: %v", inbox, messages[0].Envelope.Subject)
+		msg := messages[0]
+		header := msg.FindBodySection(bodySection)
+
+		log.Printf("Subject: %v", msg.Envelope.Subject)
+		log.Printf("Header: %v ", string(header))
+
+		return header, nil
 
 	}
 
-	return nil
+	return nil, nil
+}
+
+func FetchAllMessages(m *imap.SelectData, c *imapclient.Client, inbox string) ([]*imapclient.FetchMessageBuffer, error) {
+
+	if m.NumMessages == 0 {
+		return nil, nil
+	}
+
+	var seqSet imap.SeqSet
+	seqSet.AddRange(1, m.NumMessages)
+	bodySection := &imap.FetchItemBodySection{Peek: true}
+	fetchOptions := &imap.FetchOptions{
+		Envelope:    true,
+		BodySection: []*imap.FetchItemBodySection{bodySection},
+	}
+
+	messages, err := c.Fetch(seqSet, fetchOptions).Collect()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch messages in %s: %w", inbox, err)
+	}
+
+	return messages, nil
 }

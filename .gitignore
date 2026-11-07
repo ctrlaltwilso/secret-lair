@@ -24,3 +24,6 @@ go.work.sum
 .vscode/
 .idea/
 *.swp
+
+# Real emails saved for parser development (contain personal tracking links)
+testdata/
