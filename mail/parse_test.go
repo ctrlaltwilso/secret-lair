@@ -23,7 +23,7 @@ func TestPlainText(t *testing.T) {
 
 		defer f.Close()
 
-		p, err := PlainText(f)
+		p, s, err := PlainText(f)
 		if err != nil {
 			t.Logf("%s: %v", e.Name(), err)
 			continue
@@ -37,8 +37,26 @@ func TestPlainText(t *testing.T) {
 			continue
 		}
 
+		kind := Classify(firstline)
+
 		fmt.Println("First Line:", firstline)
-		fmt.Println("Kind:", Classify(firstline))
+		fmt.Println("Kind:", kind)
+		fmt.Println("Subject:", s)
+
+		if kind == KindUnknown {
+			kind = Classify(s)
+		}
+
+		fmt.Println("Fallback kind:", kind)
 	}
 
 }
+
+// func TestClassify(t *testing.T) {
+// 	tests := []struct {
+// 		line string
+// 		want Kind
+// 	}{
+// 		SPACE OBJECT IDENTIFIED…
+// 	}
+// }

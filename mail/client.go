@@ -26,7 +26,7 @@ func MailClient(username string, app_password string, inbox string, address stri
 		return err
 	}
 
-	text, err := PlainText(bytes.NewReader(raw))
+	text, subject, err := PlainText(bytes.NewReader(raw))
 	if err != nil {
 		return err
 	}
@@ -36,6 +36,10 @@ func MailClient(username string, app_password string, inbox string, address stri
 		return err
 	}
 	kind := Classify(firstLine)
+
+	if kind == KindUnknown {
+		kind = Classify(subject)
+	}
 
 	log.Printf("latest email: %q (kind: %s)", firstLine, kind)
 
