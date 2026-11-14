@@ -49,14 +49,4 @@ func TestPlainText(t *testing.T) {
 
 		fmt.Println("Fallback kind:", kind)
 	}
-
 }
-
-// func TestClassify(t *testing.T) {
-// 	tests := []struct {
-// 		line string
-// 		want Kind
-// 	}{
-// 		SPACE OBJECT IDENTIFIED…
-// 	}
-// }
