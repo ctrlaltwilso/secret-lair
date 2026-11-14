@@ -26,19 +26,19 @@ func MailClient(username string, app_password string, inbox string, address stri
 		return err
 	}
 
-	text, subject, err := PlainText(bytes.NewReader(raw))
+	email, err := ReadEmail(bytes.NewReader(raw))
 	if err != nil {
 		return err
 	}
 
-	firstLine, err := FirstLine(text)
+	firstLine, err := FirstLine(email.Text)
 	if err != nil {
 		return err
 	}
 	kind := Classify(firstLine)
 
 	if kind == KindUnknown {
-		kind = Classify(subject)
+		kind = Classify(email.Subject)
 	}
 
 	log.Printf("latest email: %q (kind: %s)", firstLine, kind)

@@ -1,13 +1,12 @@
 package mail
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
-func TestPlainText(t *testing.T) {
+func TestReadEmail(t *testing.T) {
 	entries, err := os.ReadDir("../testdata/all/")
 	if err != nil {
 		t.Fatal(err)
@@ -23,15 +22,13 @@ func TestPlainText(t *testing.T) {
 
 		defer f.Close()
 
-		p, s, err := PlainText(f)
+		email, err := ReadEmail(f)
 		if err != nil {
 			t.Logf("%s: %v", e.Name(), err)
 			continue
 		}
 
-		fmt.Println("Email: Captured")
-
-		firstline, err := FirstLine(p)
+		firstline, err := FirstLine(email.Text)
 		if err != nil {
 			t.Logf("%s: %v", e.Name(), err)
 			continue
@@ -39,14 +36,11 @@ func TestPlainText(t *testing.T) {
 
 		kind := Classify(firstline)
 
-		fmt.Println("First Line:", firstline)
-		fmt.Println("Kind:", kind)
-		fmt.Println("Subject:", s)
-
 		if kind == KindUnknown {
-			kind = Classify(s)
+			kind = Classify(email.Subject)
 		}
 
-		fmt.Println("Fallback kind:", kind)
+		t.Logf("%s  [%s]\n  line:    %q\n  subject: %q\n  sent:    %s",
+			e.Name(), kind, firstline, email.Subject, email.Sent.Format("2006-01-02 15:04"))
 	}
 }

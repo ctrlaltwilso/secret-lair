@@ -4,20 +4,32 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	_ "github.com/emersion/go-message/charset"
 	gomail "github.com/emersion/go-message/mail"
 )
 
-func PlainText(r io.Reader) (string, string, error) {
+type Email struct {
+	Subject string
+	Text    string
+	Sent    time.Time
+}
+
+func ReadEmail(r io.Reader) (Email, error) {
 	mr, err := gomail.CreateReader(r)
 	if err != nil {
-		return "", "", err
+		return Email{}, err
 	}
 
-	s, err := mr.Header.Subject()
+	subject, err := mr.Header.Subject()
 	if err != nil {
-		return "", "", err
+		return Email{}, err
+	}
+
+	sent, err := mr.Header.Date()
+	if err != nil {
+		return Email{}, err
 	}
 
 	for {
@@ -25,7 +37,7 @@ func PlainText(r io.Reader) (string, string, error) {
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return "", "", err
+			return Email{}, err
 		}
 
 		switch h := p.Header.(type) {
@@ -33,12 +45,12 @@ func PlainText(r io.Reader) (string, string, error) {
 			t, _, _ := h.ContentType()
 			if t == "text/plain" {
 				b, _ := io.ReadAll(p.Body)
-				return string(b), string(s), nil
+				return Email{Subject: subject, Text: string(b), Sent: sent}, nil
 			}
 		}
 	}
 
-	return "", "", nil
+	return Email{}, nil
 }
 
 func FirstLine(s string) (string, error) {
